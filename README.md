@@ -19,7 +19,6 @@ A trusted-vendor directory and client portal for realtors and property managers.
 ## Run it
 
 ```bash
-cd homebase
 pip install -r requirements.txt
 python -m app.seed            # optional: demo data, login demo@homebase.test / homebase123
 uvicorn app.main:create_app --factory --reload
@@ -52,7 +51,7 @@ shown to clients.
 | `app/auth.py` | Password hashing (PBKDF2) |
 | `app/seed.py` | Demo data |
 | `app/templates/` | Jinja2 HTML templates (mobile-friendly, light/dark) |
-| `tests/` | `pip install -r requirements-dev.txt && pytest` |
+| `tests/` | Run with `pip install -r requirements-dev.txt && pytest` |
 
 ## Deploying
 
