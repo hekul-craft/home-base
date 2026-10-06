@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Properties{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Managed properties</h1>
+  <a class="button primary" href="/properties/new">Add property</a>
+</div>
+<div class="cards">
+{% for p in properties %}
+  <a class="card link-card" href="/properties/{{ p.id }}">
+    <div class="vendor-name">{{ p.name or p.address }}</div>
+    {% if p.name %}<div class="muted small">{{ p.address }}</div>{% endif %}
+    <div class="small">{{ p.unit_count }} unit{{ "s" if p.unit_count != 1 }} · {{ p.tenants }} tenant{{ "s" if p.tenants != 1 }}
+      {% if p.open_requests %}<span class="badge status-new">{{ p.open_requests }} open</span>{% endif %}</div>
+  </a>
+{% else %}
+  <p class="muted">No managed properties yet. Add one to keep a per-property “who to call” list and service history.</p>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit property" if prop.id else "Add property" }}{% endblock %}
+{% block content %}
+<h1>{{ "Edit property" if prop.id else "Add a managed property" }}</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post" class="card form-grid">
+  <label class="full">Address * <input name="address" required value="{{ prop.address or '' }}"></label>
+  <label>Nickname <input name="name" value="{{ prop.name or '' }}" placeholder="Maple Street Duplex"></label>
+  <label>Units <input name="unit_count" type="number" min="1" value="{{ prop.unit_count or 1 }}"></label>
+  <label class="full">Owner <input name="owner_name" value="{{ prop.owner_name or '' }}"></label>
+  <label class="full">Notes <span class="muted small">(gate codes, shut-off locations, appliance ages…)</span>
+    <textarea name="notes" rows="4">{{ prop.notes or '' }}</textarea></label>
+  <div class="full actions">
+    <button class="primary">Save property</button>
+    <a href="{{ '/properties/' ~ prop.id if prop.id else '/properties' }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

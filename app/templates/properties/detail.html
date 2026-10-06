@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, urgency_badge, category_options %}
+{% block title %}{{ prop.name or prop.address }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ prop.name or prop.address }}</h1>
+    {% if prop.name %}<p class="muted">{{ prop.address }}</p>{% endif %}
+    <p class="muted small">{{ prop.unit_count }} unit{{ "s" if prop.unit_count != 1 }}{% if prop.owner_name %} · Owner: {{ prop.owner_name }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="button primary" href="/requests/new?property_id={{ prop.id }}">Log a request</a>
+    <a class="button" href="/properties/{{ prop.id }}/edit">Edit</a>
+  </div>
+</div>
+{% if prop.notes %}<div class="card"><p class="pre">{{ prop.notes }}</p></div>{% endif %}
+
+<section class="card">
+  <h2>Who to call</h2>
+  {% if call_list %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Job</th><th>Vendor</th><th>Phone</th><th></th></tr></thead>
+    <tbody>
+    {% for v in call_list %}
+      <tr>
+        <td>{{ v.category }}</td>
+        <td><a href="/vendors/{{ v.id }}">{{ v.name }}</a>{% if v.company %} <span class="muted small">{{ v.company }}</span>{% endif %}</td>
+        <td>{% if v.phone %}<a href="tel:{{ v.phone }}">{{ v.phone }}</a>{% endif %}</td>
+        <td><form method="post" action="/properties/{{ prop.id }}/call-list"><input type="hidden" name="category" value="{{ v.category }}"><button class="link small">remove</button></form></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="muted">No vendors assigned yet.</p>{% endif %}
+
+  <form method="post" action="/properties/{{ prop.id }}/call-list" class="filters">
+    <select name="category" required>{{ category_options(categories, "", "Job type…") }}</select>
+    <select name="vendor_id" required>
+      <option value="">Vendor…</option>
+      {% for v in vendors %}<option value="{{ v.id }}">{{ v.category }} - {{ v.name }}{% if v.company %} ({{ v.company }}){% endif %}</option>{% endfor %}
+    </select>
+    <button>Set</button>
+  </form>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Tenants</h2>
+    {% for t in tenants %}
+      <div class="row"><a href="/clients/{{ t.id }}">{{ t.name }}</a><span class="muted small">{% if t.unit %}Unit {{ t.unit }} · {% endif %}{% if t.lease_end %}lease ends {{ t.lease_end }}{% endif %}</span></div>
+    {% else %}<p class="muted">No tenants linked. <a href="/clients/new?type=renter">Add a renter</a> and pick this property.</p>{% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Service history</h2>
+    {% for r in history %}
+      <a class="row link-row" href="/requests/{{ r.id }}">
+        <div><strong>{{ r.category }}</strong> {{ urgency_badge(r.urgency) }} - {{ r.description[:60] }}
+          <div class="muted small">{{ r.created_at[:10] }} · {{ r.vendor_name or "unassigned" }}{% if r.cost %} · ${{ "%.2f"|format(r.cost) }}{% endif %}</div></div>
+        {{ status_badge(r.status) }}
+      </a>
+    {% else %}<p class="muted">No service history.</p>{% endfor %}
+  </section>
+</div>
+
+<form method="post" action="/properties/{{ prop.id }}/delete" onsubmit="return confirm('Delete this property? Its call list will be removed.')">
+  <button class="danger">Delete property</button>
+</form>
+{% endblock %}

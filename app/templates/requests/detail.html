@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, urgency_badge, stars %}
+{% block title %}{{ req.category }} request{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="muted"><a href="/requests">Service requests</a> · #{{ req.id }}{% if req.source == "portal" %} · submitted by tenant{% endif %}</p>
+    <h1>{{ req.category }} {{ urgency_badge(req.urgency) }} {{ status_badge(req.status) }}</h1>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Problem</h2>
+    <p class="pre">{{ req.description }}</p>
+    <dl>
+      {% if req.property_address %}<dt>Property</dt><dd><a href="/properties/{{ req.property_id }}">{{ req.property_address }}</a>{% if req.client_unit %} · Unit {{ req.client_unit }}{% endif %}</dd>{% endif %}
+      {% if req.client_name %}<dt>Client</dt><dd><a href="/clients/{{ req.client_id }}">{{ req.client_name }}</a>{% if req.client_phone %} · <a href="tel:{{ req.client_phone }}">{{ req.client_phone }}</a>{% endif %}</dd>{% endif %}
+      <dt>Logged</dt><dd>{{ req.created_at[:16] }}</dd>
+      <dt>Updated</dt><dd>{{ req.updated_at[:16] }}</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    {% if vendor %}
+      <h2>Assigned to</h2>
+      <p><a href="/vendors/{{ vendor.id }}"><strong>{{ vendor.name }}</strong></a>{% if vendor.company %} · {{ vendor.company }}{% endif %}</p>
+      {% if vendor.phone %}<p><a class="button" href="tel:{{ vendor.phone }}">Call {{ vendor.phone }}</a></p>{% endif %}
+    {% elif suggestion %}
+      <h2>Suggested vendor</h2>
+      <p><a href="/vendors/{{ suggestion.id }}"><strong>{{ suggestion.name }}</strong></a>{% if suggestion.company %} · {{ suggestion.company }}{% endif %} {{ stars(suggestion.rating) }}</p>
+      {% if suggestion.phone %}<p><a class="button" href="tel:{{ suggestion.phone }}">Call {{ suggestion.phone }}</a></p>{% endif %}
+    {% else %}
+      <h2>No {{ req.category }} vendor yet</h2>
+      <p><a href="/vendors/new?category={{ req.category|urlencode }}">Add one</a></p>
+    {% endif %}
+  </section>
+</div>
+
+<form method="post" class="card form-grid">
+  <h2 class="full">Update</h2>
+  <label>Status
+    <select name="status">{% for s in statuses %}<option value="{{ s }}" {% if s == req.status %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select>
+  </label>
+  <label>Vendor
+    <select name="vendor_id">
+      <option value="">Unassigned</option>
+      {% set selected_id = req.vendor_id or (suggestion.id if suggestion and req.status == "new" else None) %}
+      {% for v in vendors %}<option value="{{ v.id }}" {% if v.id == selected_id %}selected{% endif %}>{{ v.category }} - {{ v.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Cost <input name="cost" inputmode="decimal" value="{{ '%.2f'|format(req.cost) if req.cost is not none else '' }}" placeholder="0.00"></label>
+  <label class="full">Notes <textarea name="staff_notes" rows="3">{{ req.staff_notes }}</textarea></label>
+  <div class="full actions"><button class="primary">Save</button></div>
+</form>
+{% endblock %}

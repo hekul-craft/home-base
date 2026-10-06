@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, urgency_badge %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Good to see you, {{ user.name.split(" ")[0] }}</h1>
+
+<div class="stats">
+  <a class="stat" href="/vendors"><strong>{{ counts.vendors }}</strong><span>Trusted vendors</span></a>
+  <a class="stat" href="/clients"><strong>{{ counts.clients }}</strong><span>Clients</span></a>
+  <a class="stat" href="/properties"><strong>{{ counts.properties }}</strong><span>Managed properties</span></a>
+  <a class="stat" href="/requests"><strong>{{ counts.open_requests }}</strong><span>Open requests</span></a>
+</div>
+
+{% if counts.vendors == 0 %}
+<div class="card callout">
+  <h2>Get started</h2>
+  <ol>
+    <li><a href="/vendors/new">Add your trusted vendors</a> - plumbers, HVAC, lenders, inspectors…</li>
+    <li><a href="/clients/new">Add a past buyer or renter</a> and send them their private portal link.</li>
+    <li><a href="/properties/new">Add the properties you manage</a> and set who to call for each job.</li>
+  </ol>
+</div>
+{% endif %}
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Clients asking for an introduction</h2>
+    {% for f in referrals %}
+      <div class="row">
+        <div>
+          <a href="/clients/{{ f.cid }}"><strong>{{ f.client_name }}</strong></a> wants
+          <a href="/vendors/{{ f.vendor_id }}">{{ f.vendor_name }}</a> <span class="muted">({{ f.category }})</span>
+          {% if f.message %}<div class="quote">“{{ f.message }}”</div>{% endif %}
+          <div class="muted small">{{ f.created_at[:16] }}</div>
+        </div>
+        <form method="post" action="/referrals/{{ f.id }}/handled"><input type="hidden" name="next" value="/"><button class="small">Done</button></form>
+      </div>
+    {% else %}
+      <p class="muted">No pending introductions. When a client taps “Connect me” in their portal, it shows up here.</p>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Open service requests</h2>
+    {% for r in open_requests %}
+      <a class="row link-row" href="/requests/{{ r.id }}">
+        <div>
+          <strong>{{ r.category }}</strong> {{ urgency_badge(r.urgency) }}
+          <div class="muted small">{{ r.property_address or r.client_name or "No location" }} · {{ r.vendor_name or "unassigned" }}</div>
+        </div>
+        {{ status_badge(r.status) }}
+      </a>
+    {% else %}
+      <p class="muted">Nothing open. 🎉</p>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Home anniversaries (next 60 days)</h2>
+    <p class="muted small">A great reason to reach out - a card, a call, or a reminder of your vendor list.</p>
+    {% for a in anniversaries %}
+      <div class="row">
+        <div><a href="/clients/{{ a.client.id }}"><strong>{{ a.client.name }}</strong></a>
+          <div class="muted small">{{ a.years }} year{{ "s" if a.years != 1 }} on {{ a.date.strftime("%b %-d") }} · {{ a.client.address }}</div></div>
+        <span class="badge">{% if a.days == 0 %}today{% else %}in {{ a.days }}d{% endif %}</span>
+      </div>
+    {% else %}
+      <p class="muted">No anniversaries coming up. Add closing dates to past buyers to see them here.</p>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Renters on the path to buying</h2>
+    {% for r in renters %}
+      <a class="row link-row" href="/clients/{{ r.id }}">
+        <strong>{{ r.name }}</strong>
+        <span class="progress"><span style="width: {{ (r.done / total_steps * 100)|round|int }}%"></span></span>
+        <span class="muted small">{{ r.done }}/{{ total_steps }}</span>
+      </a>
+    {% else %}
+      <p class="muted">No renters yet.</p>
+    {% endfor %}
+    {% if lease_endings %}
+      <h3>Leases ending soon</h3>
+      {% for l in lease_endings %}
+        <div class="row"><a href="/clients/{{ l.client.id }}">{{ l.client.name }}</a><span class="badge">{{ l.days }} days</span></div>
+      {% endfor %}
+      <p class="muted small">A lease renewal is a natural time to talk about buying.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

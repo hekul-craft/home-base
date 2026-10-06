@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<form method="post" action="/settings" class="card form-grid">
+  <h2 class="full">Business &amp; portal</h2>
+  <p class="full muted small">This is what clients see at the top and bottom of their portal.</p>
+  <label>Business name <input name="business_name" value="{{ settings.business_name }}"></label>
+  <label>Agent / contact name <input name="agent_name" value="{{ settings.agent_name }}"></label>
+  <label>Phone <input name="agent_phone" type="tel" value="{{ settings.agent_phone }}"></label>
+  <label>Email <input name="agent_email" type="email" value="{{ settings.agent_email }}"></label>
+  <label class="full">Portal welcome message <textarea name="portal_welcome" rows="2">{{ settings.portal_welcome }}</textarea></label>
+  <div class="full actions"><button class="primary">Save</button></div>
+</form>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Team</h2>
+    {% for m in team %}<div class="row"><span>{{ m.name }}</span><span class="muted small">{{ m.email }}</span></div>{% endfor %}
+    <h3>Add a teammate</h3>
+    <form method="post" action="/settings/team" class="stack">
+      <input name="name" placeholder="Name" required>
+      <input name="email" type="email" placeholder="Email" required>
+      <input name="password" type="password" placeholder="Temporary password (8+ chars)" minlength="8" required>
+      <button>Add teammate</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Change your password</h2>
+    <form method="post" action="/settings/password" class="stack">
+      <input name="current" type="password" placeholder="Current password" required>
+      <input name="new" type="password" placeholder="New password (8+ chars)" minlength="8" required>
+      <button>Change password</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category_options %}
+{% block title %}Log request{% endblock %}
+{% block content %}
+<h1>Log a service request</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post" class="card form-grid">
+  <label>Job type * <select name="category" required>{{ category_options(categories, req.category) }}</select></label>
+  <label>Urgency
+    <select name="urgency">{% for u in urgencies %}<option value="{{ u }}" {% if u == req.urgency %}selected{% endif %}>{{ u|capitalize }}</option>{% endfor %}</select>
+  </label>
+  <label>Property
+    <select name="property_id"><option value="">—</option>
+      {% for p in properties %}<option value="{{ p.id }}" {% if p.id == req.property_id %}selected{% endif %}>{{ p.name or p.address }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Client
+    <select name="client_id"><option value="">—</option>
+      {% for c in clients %}<option value="{{ c.id }}" {% if c.id == req.client_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="full">What's wrong? * <textarea name="description" rows="4" required>{{ req.description or '' }}</textarea></label>
+  <div class="full actions"><button class="primary">Log request</button><a href="/requests">Cancel</a></div>
+</form>
+{% endblock %}

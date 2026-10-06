@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars, category_options %}
+{% block title %}{{ client.name.split(" ")[0] }}'s home resources{% endblock %}
+{% block content %}
+{% set first = client.name.split(" ")[0] %}
+<header class="portal-hero">
+  <p class="eyebrow">{{ settings.business_name }}</p>
+  <h1>Hi {{ first }}!</h1>
+  <p>{{ settings.portal_welcome }}</p>
+  {% if client.client_type == "buyer" and years_owned is defined and years_owned >= 1 %}
+    <p class="badge gold">🏡 {{ years_owned }} year{{ "s" if years_owned != 1 }} in your home</p>
+  {% endif %}
+  <nav class="portal-nav">
+    <a href="#pros">Trusted pros</a>
+    {% if client.client_type == "renter" %}<a href="#maintenance">Maintenance</a><a href="#path">Path to owning</a>{% endif %}
+    <a href="#seasonal">Seasonal checklist</a>
+    <a href="#contact">Contact us</a>
+  </nav>
+</header>
+
+{% if client.client_type == "renter" %}
+<section class="card" id="maintenance">
+  <h2>Request maintenance</h2>
+  <form method="post" action="/p/{{ token }}/requests" class="form-grid">
+    <label>What kind of issue? <select name="category" required>{{ category_options(categories, "") }}</select></label>
+    <label>How urgent?
+      <select name="urgency">
+        <option value="normal">Normal</option>
+        <option value="urgent">Urgent - leak, no heat, safety issue</option>
+        <option value="low">Low - whenever convenient</option>
+      </select>
+    </label>
+    <label class="full">Describe the problem <textarea name="description" rows="3" required placeholder="The kitchen sink is draining slowly…"></textarea></label>
+    <p class="full muted small">For emergencies like fire, gas smell, or flooding, call 911 or your utility first, then call us{% if settings.agent_phone %} at <a href="tel:{{ settings.agent_phone }}">{{ settings.agent_phone }}</a>{% endif %}.</p>
+    <div class="full"><button class="primary">Send request</button></div>
+  </form>
+  {% if my_requests %}
+    <h3>Your requests</h3>
+    {% for r in my_requests %}
+      <div class="row"><div><strong>{{ r.category }}</strong> - {{ r.description[:60] }}<div class="muted small">{{ r.created_at[:10] }}{% if r.vendor_name and r.status in ("assigned", "scheduled") %} · {{ r.vendor_name }} is on it{% endif %}</div></div>
+        <span class="badge status-{{ r.status }}">{{ r.status }}</span></div>
+    {% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+
+<section id="pros">
+  <h2 class="section-title">Our trusted pros</h2>
+  <p class="muted">People we've worked with and would send to our own homes. Tap “Connect me” and we'll make a personal introduction.</p>
+  {% if directory %}
+    <nav class="chips">{% for cat in directory %}<a href="#{{ cat|slug }}">{{ cat }}</a>{% endfor %}</nav>
+    {% for cat, vendors in directory.items() %}
+      <h3 id="{{ cat|slug }}" class="section-title">{{ cat }}</h3>
+      <div class="cards">
+      {% for v in vendors %}
+        <div class="card vendor-card">
+          <div class="vendor-name">{{ v.name }} {% if v.is_preferred %}<span class="badge gold">Top pick</span>{% endif %}</div>
+          {% if v.company %}<div class="muted">{{ v.company }}</div>{% endif %}
+          <div class="small">{{ stars(v.rating) }} {% if v.insured %}<span class="badge">Licensed &amp; insured</span>{% endif %}</div>
+          {% if v.service_area %}<div class="small muted">Serves {{ v.service_area }}</div>{% endif %}
+          {% if v.client_perk %}<div class="perk">🎁 {{ v.client_perk }}</div>{% endif %}
+          <div class="vendor-actions">
+            {% if v.phone %}<a class="button small" href="tel:{{ v.phone }}">Call</a>{% endif %}
+            {% if v.email %}<a class="button small" href="mailto:{{ v.email }}">Email</a>{% endif %}
+            {% if v.website %}<a class="button small" href="{{ v.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
+          </div>
+          {% if v.id in referred %}
+            <p class="small muted">✓ We've got your request - we'll be in touch.</p>
+          {% else %}
+          <details>
+            <summary>Connect me</summary>
+            <form method="post" action="/p/{{ token }}/connect" class="stack">
+              <input type="hidden" name="vendor_id" value="{{ v.id }}">
+              <textarea name="message" rows="2" placeholder="Optional: what do you need help with?"></textarea>
+              <button class="primary small">Request introduction</button>
+            </form>
+          </details>
+          {% endif %}
+        </div>
+      {% endfor %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="muted">Our vendor list is coming soon.</p>
+  {% endif %}
+</section>
+
+{% if client.client_type == "renter" %}
+<section class="card" id="path">
+  <h2>Your path to homeownership</h2>
+  <p class="muted">Thinking about buying someday? Work through these at your own pace - we're here to help with every step.</p>
+  <div class="progress big"><span style="width: {{ (done|length / steps|length * 100)|round|int }}%"></span></div>
+  <p class="small muted">{{ done|length }} of {{ steps|length }} steps complete</p>
+  <ul class="steps">
+  {% for s in steps %}
+    <li class="{{ 'done' if s.key in done }}">
+      <form method="post" action="/p/{{ token }}/readiness">
+        <input type="hidden" name="item_key" value="{{ s.key }}">
+        <input type="hidden" name="done" value="{{ '0' if s.key in done else '1' }}">
+        <button class="tick" aria-label="{{ 'Mark not done' if s.key in done else 'Mark done' }}">{{ "✓" if s.key in done else "" }}</button>
+      </form>
+      <div>
+        <strong>{{ s.title }}</strong>
+        <p class="small muted">{{ s.help }}</p>
+        {% if s.category and s.category in directory %}<a class="small" href="#{{ s.category|slug }}">See our recommended {{ s.category|lower }}s →</a>{% endif %}
+      </div>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card" id="seasonal">
+  <h2>{{ season|capitalize }} home checklist</h2>
+  <ul class="checklist">
+    {% for tip, cat in tips %}
+      <li>{{ tip }}{% if cat and cat in directory %} · <a class="small" href="#{{ cat|slug }}">find a pro</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card callout" id="contact">
+  <h2>Questions? We're still your real estate team.</h2>
+  <p>{% if client.client_type == "buyer" %}Curious what your home is worth now, thinking about refinancing, or know someone who's looking? {% elif client.client_type == "renter" %}Whenever you're ready to explore buying, we'd love to help. {% endif %}Reach out anytime.</p>
+  <p>
+    <strong>{{ settings.agent_name or settings.business_name }}</strong><br>
+    {% if settings.agent_phone %}<a href="tel:{{ settings.agent_phone }}">{{ settings.agent_phone }}</a><br>{% endif %}
+    {% if settings.agent_email %}<a href="mailto:{{ settings.agent_email }}">{{ settings.agent_email }}</a>{% endif %}
+  </p>
+</section>
+<footer class="muted small center">Personal page for {{ client.name }} · {{ settings.business_name }}</footer>
+{% endblock %}

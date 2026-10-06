@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit client" if client.id else "Add client" }}{% endblock %}
+{% block content %}
+<h1>{{ "Edit " ~ client.name if client.id else "Add a client" }}</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post" class="card form-grid">
+  <label>Name * <input name="name" required value="{{ client.name or '' }}"></label>
+  <label>Client type *
+    <select name="client_type" id="client_type" required>
+      {% for key, label in client_types.items() %}<option value="{{ key }}" {% if key == client.client_type %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Email <input name="email" type="email" value="{{ client.email or '' }}"></label>
+  <label>Phone <input name="phone" type="tel" value="{{ client.phone or '' }}"></label>
+  <label class="full">Home address <input name="address" value="{{ client.address or '' }}"></label>
+  <label><span class="for-buyer">Closing date</span><span class="for-renter">Lease start</span><span class="for-owner">Client since</span>
+    <input name="key_date" type="date" value="{{ client.key_date or '' }}"></label>
+
+  <label class="for-renter">Lease end <input name="lease_end" type="date" value="{{ client.lease_end or '' }}"></label>
+  <label class="for-renter">Managed property
+    <select name="property_id">
+      <option value="">Not one of ours</option>
+      {% for p in properties %}<option value="{{ p.id }}" {% if p.id == client.property_id %}selected{% endif %}>{{ p.name or p.address }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="for-renter">Unit <input name="unit" value="{{ client.unit or '' }}"></label>
+
+  <label class="full">Notes <span class="muted small">(internal)</span><textarea name="notes" rows="3">{{ client.notes or '' }}</textarea></label>
+  <div class="full actions">
+    <button class="primary">Save client</button>
+    <a href="{{ '/clients/' ~ client.id if client.id else '/clients' }}">Cancel</a>
+  </div>
+</form>
+<script>
+  // Show only the fields relevant to the chosen client type.
+  const typeSelect = document.getElementById("client_type");
+  function syncType() {
+    for (const t of ["buyer", "renter", "owner"]) {
+      document.querySelectorAll(".for-" + t).forEach(el => el.hidden = typeSelect.value !== t);
+    }
+  }
+  typeSelect.addEventListener("change", syncType);
+  syncType();
+</script>
+{% endblock %}

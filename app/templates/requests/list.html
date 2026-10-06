@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, urgency_badge %}
+{% block title %}Service requests{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Service requests</h1>
+  <a class="button primary" href="/requests/new">Log request</a>
+</div>
+<nav class="tabs">
+  {% for s in ["open"] + statuses + ["all"] %}<a href="/requests?status={{ s }}" {% if s == status %}class="active"{% endif %}>{{ s|capitalize }}</a>{% endfor %}
+</nav>
+<div class="card table-wrap">
+<table>
+  <thead><tr><th>Job</th><th>Where / who</th><th>Vendor</th><th>Status</th><th>Logged</th></tr></thead>
+  <tbody>
+  {% for r in requests %}
+    <tr>
+      <td><a href="/requests/{{ r.id }}"><strong>{{ r.category }}</strong></a> {{ urgency_badge(r.urgency) }}<div class="small muted">{{ r.description[:60] }}</div></td>
+      <td class="small">{{ r.property_address or "" }}{% if r.client_name %}<br>{{ r.client_name }}{% endif %}</td>
+      <td class="small">{{ r.vendor_name or "—" }}</td>
+      <td>{{ status_badge(r.status) }}{% if r.source == "portal" %} <span class="badge muted">from portal</span>{% endif %}</td>
+      <td class="small">{{ r.created_at[:10] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="muted">No requests here.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

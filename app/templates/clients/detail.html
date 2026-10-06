@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="muted"><span class="badge type-{{ client.client_type }}">{{ client_types[client.client_type] }}</span></p>
+    <h1>{{ client.name }}</h1>
+    <p class="muted">{{ client.address }}{% if client.unit %} #{{ client.unit }}{% endif %}</p>
+  </div>
+  <a class="button" href="/clients/{{ client.id }}/edit">Edit</a>
+</div>
+
+<section class="card callout">
+  <h2>Private portal link</h2>
+  <p class="muted small">Text or email this to {{ client.name.split(" ")[0] }}. No password needed - anyone with the link can see their portal, so create a new link if it's ever shared by mistake.</p>
+  <div class="copy-row">
+    <input id="portal-url" readonly value="{{ portal_url }}">
+    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('portal-url').value); this.textContent='Copied!'">Copy</button>
+    <a class="button" href="{{ portal_url }}" target="_blank" rel="noopener">Preview</a>
+  </div>
+  <div class="actions">
+    {% if client.email %}<a href="mailto:{{ client.email }}?subject={{ ('Your home resources from ' ~ settings.business_name)|urlencode }}&body={{ ('Hi ' ~ client.name.split(' ')[0] ~ ',\n\nHere is your personal page with the local pros we trust and recommend:\n' ~ portal_url ~ '\n\nReach out anytime!\n' ~ settings.agent_name)|urlencode }}">Email link</a>{% endif %}
+    {% if client.phone %}<a href="sms:{{ client.phone }}?&body={{ ('Hi ' ~ client.name.split(' ')[0] ~ '! Here are the local pros we recommend: ' ~ portal_url)|urlencode }}">Text link</a>{% endif %}
+    <form method="post" action="/clients/{{ client.id }}/new-link" class="inline" onsubmit="return confirm('Create a new link? The current link will stop working.')"><button class="link">Create new link</button></form>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Details</h2>
+    <dl>
+      {% if client.email %}<dt>Email</dt><dd><a href="mailto:{{ client.email }}">{{ client.email }}</a></dd>{% endif %}
+      {% if client.phone %}<dt>Phone</dt><dd><a href="tel:{{ client.phone }}">{{ client.phone }}</a></dd>{% endif %}
+      {% if client.client_type == "buyer" %}
+        <dt>Closing date</dt><dd>{{ client.key_date or "—" }}</dd>
+        {% if anniversary %}<dt>Next anniversary</dt><dd>{{ anniversary[0] }} ({{ anniversary[1] }} yr)</dd>{% endif %}
+      {% elif client.client_type == "renter" %}
+        <dt>Lease</dt><dd>{{ client.key_date or "?" }} → {{ client.lease_end or "?" }}</dd>
+        {% if prop %}<dt>Property</dt><dd><a href="/properties/{{ prop.id }}">{{ prop.name or prop.address }}</a></dd>{% endif %}
+      {% else %}
+        <dt>Client since</dt><dd>{{ client.key_date or "—" }}</dd>
+      {% endif %}
+    </dl>
+    {% if client.notes %}<h3>Notes</h3><p class="pre">{{ client.notes }}</p>{% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Introductions requested</h2>
+    {% for f in referrals %}
+      <div class="row">
+        <div><a href="/vendors/{{ f.vendor_id }}">{{ f.vendor_name }}</a> <span class="muted small">{{ f.category }} · {{ f.created_at[:10] }}</span>
+          {% if f.message %}<div class="quote">“{{ f.message }}”</div>{% endif %}</div>
+        {% if not f.handled %}<form method="post" action="/referrals/{{ f.id }}/handled"><input type="hidden" name="next" value="/clients/{{ client.id }}"><button class="small">Done</button></form>
+        {% else %}<span class="muted small">handled</span>{% endif %}
+      </div>
+    {% else %}<p class="muted">None yet.</p>{% endfor %}
+  </section>
+</div>
+
+{% if client.client_type == "renter" %}
+<section class="card">
+  <h2>Path to homeownership · {{ done|length }}/{{ steps|length }}</h2>
+  <ul class="checklist">
+    {% for s in steps %}<li class="{{ 'done' if s.key in done }}">{{ "✅" if s.key in done else "⬜" }} {{ s.title }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="page-head"><h2>Service requests</h2><a class="button small" href="/requests/new?client_id={{ client.id }}{% if client.property_id %}&property_id={{ client.property_id }}{% endif %}">Log request</a></div>
+  {% for r in requests %}
+    <a class="row link-row" href="/requests/{{ r.id }}">
+      <div><strong>{{ r.category }}</strong> - {{ r.description[:70] }}<div class="muted small">{{ r.created_at[:10] }} · {{ r.vendor_name or "unassigned" }}</div></div>
+      {{ status_badge(r.status) }}
+    </a>
+  {% else %}<p class="muted">No requests.</p>{% endfor %}
+</section>
+
+<form method="post" action="/clients/{{ client.id }}/delete" onsubmit="return confirm('Delete this client? Their portal link will stop working.')">
+  <button class="danger">Delete client</button>
+</form>
+{% endblock %}

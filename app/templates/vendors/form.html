@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category_options %}
+{% block title %}{{ "Edit vendor" if vendor.id else "Add vendor" }}{% endblock %}
+{% block content %}
+<h1>{{ "Edit " ~ vendor.name if vendor.id else "Add a trusted vendor" }}</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post" class="card form-grid">
+  <label>Contact name * <input name="name" required value="{{ vendor.name or '' }}"></label>
+  <label>Company <input name="company" value="{{ vendor.company or '' }}"></label>
+  <label>Category * <select name="category" required>{{ category_options(categories, vendor.category) }}</select></label>
+  <label>Rating
+    <select name="rating">
+      {% for n in range(0, 6) %}<option value="{{ n }}" {% if (vendor.rating or 0) == n %}selected{% endif %}>{{ "Unrated" if n == 0 else "★" * n }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Phone <input name="phone" type="tel" value="{{ vendor.phone or '' }}"></label>
+  <label>Email <input name="email" type="email" value="{{ vendor.email or '' }}"></label>
+  <label>Website <input name="website" value="{{ vendor.website or '' }}" placeholder="example.com"></label>
+  <label>Service area <input name="service_area" value="{{ vendor.service_area or '' }}" placeholder="North County, Downtown…"></label>
+  <label>License # / certifications <input name="license_info" value="{{ vendor.license_info or '' }}"></label>
+  <label>Client perk <input name="client_perk" value="{{ vendor.client_perk or '' }}" placeholder="10% off for our clients"></label>
+  <label class="full">Internal notes <span class="muted small">(never shown to clients)</span>
+    <textarea name="notes" rows="3">{{ vendor.notes or '' }}</textarea></label>
+  <div class="full checks">
+    <label class="check"><input type="checkbox" name="is_preferred" {% if vendor.is_preferred %}checked{% endif %}> Preferred vendor (listed first)</label>
+    <label class="check"><input type="checkbox" name="insured" {% if vendor.insured %}checked{% endif %}> Licensed &amp; insured</label>
+    <label class="check"><input type="checkbox" name="client_visible" {% if vendor.client_visible %}checked{% endif %}> Show in client portals
+      <span class="muted small">(uncheck for property-management-only vendors)</span></label>
+  </div>
+  <div class="full actions">
+    <button class="primary">Save vendor</button>
+    <a href="{{ '/vendors/' ~ vendor.id if vendor.id else '/vendors' }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

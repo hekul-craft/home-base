@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars, category_options %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Trusted vendors</h1>
+  <a class="button primary" href="/vendors/new">Add vendor</a>
+</div>
+
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Search name, company, area, notes…">
+  <select name="category" onchange="this.form.submit()">{{ category_options(categories, category, "All categories") }}</select>
+  <button>Search</button>
+</form>
+
+{% set ns = namespace(cat=None) %}
+{% for v in vendors %}
+  {% if v.category != ns.cat %}{% if ns.cat %}</div>{% endif %}{% set ns.cat = v.category %}
+    <h2 class="section-title">{{ v.category }}</h2><div class="cards">
+  {% endif %}
+  <a class="card vendor-card link-card" href="/vendors/{{ v.id }}">
+    <div class="vendor-name">{{ v.name }} {% if v.is_preferred %}<span class="badge gold">Preferred</span>{% endif %}</div>
+    {% if v.company %}<div class="muted">{{ v.company }}</div>{% endif %}
+    <div class="small">{{ v.phone }}{% if v.phone and v.email %} · {% endif %}{{ v.email }}</div>
+    <div class="small">{{ stars(v.rating) }}
+      {% if not v.client_visible %}<span class="badge muted">Internal only</span>{% endif %}
+      {% if v.insured %}<span class="badge">Insured</span>{% endif %}</div>
+  </a>
+{% else %}
+  <p class="muted">No vendors {% if q or category %}match your search{% else %}yet. <a href="/vendors/new">Add your first one</a>{% endif %}.</p>
+{% endfor %}
+{% if ns.cat %}</div>{% endif %}
+{% endblock %}

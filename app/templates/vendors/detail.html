@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars, status_badge %}
+{% block title %}{{ vendor.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="muted"><a href="/vendors?category={{ vendor.category|urlencode }}">{{ vendor.category }}</a></p>
+    <h1>{{ vendor.name }} {% if vendor.is_preferred %}<span class="badge gold">Preferred</span>{% endif %}</h1>
+    {% if vendor.company %}<p class="muted">{{ vendor.company }}</p>{% endif %}
+  </div>
+  <a class="button" href="/vendors/{{ vendor.id }}/edit">Edit</a>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Contact</h2>
+    <dl>
+      {% if vendor.phone %}<dt>Phone</dt><dd><a href="tel:{{ vendor.phone }}">{{ vendor.phone }}</a></dd>{% endif %}
+      {% if vendor.email %}<dt>Email</dt><dd><a href="mailto:{{ vendor.email }}">{{ vendor.email }}</a></dd>{% endif %}
+      {% if vendor.website %}<dt>Website</dt><dd><a href="{{ vendor.website }}" target="_blank" rel="noopener">{{ vendor.website }}</a></dd>{% endif %}
+      {% if vendor.service_area %}<dt>Service area</dt><dd>{{ vendor.service_area }}</dd>{% endif %}
+      {% if vendor.license_info %}<dt>License</dt><dd>{{ vendor.license_info }}</dd>{% endif %}
+      <dt>Insured</dt><dd>{{ "Yes" if vendor.insured else "Not confirmed" }}</dd>
+      <dt>Rating</dt><dd>{{ stars(vendor.rating) or "Unrated" }}</dd>
+      <dt>Client perk</dt><dd>{{ vendor.client_perk or "—" }}</dd>
+      <dt>Visibility</dt><dd>{{ "Shown in client portals" if vendor.client_visible else "Internal only" }}</dd>
+    </dl>
+    {% if vendor.notes %}<h3>Internal notes</h3><p class="pre">{{ vendor.notes }}</p>{% endif %}
+  </section>
+
+  <section class="card">
+    <h2>On call for</h2>
+    {% for p in assigned %}
+      <div class="row"><a href="/properties/{{ p.id }}">{{ p.name or p.address }}</a><span class="muted small">{{ p.pv_category }}</span></div>
+    {% else %}<p class="muted">Not on any property call list.</p>{% endfor %}
+
+    <h2>Client introductions ({{ referrals|length }})</h2>
+    {% for f in referrals %}
+      <div class="row"><a href="/clients/{{ f.client_id }}">{{ f.client_name }}</a><span class="muted small">{{ f.created_at[:10] }}{% if not f.handled %} · pending{% endif %}</span></div>
+    {% else %}<p class="muted">No referrals yet.</p>{% endfor %}
+  </section>
+</div>
+
+<section class="card">
+  <h2>Job history ({{ jobs|length }})</h2>
+  {% for r in jobs %}
+    <a class="row link-row" href="/requests/{{ r.id }}">
+      <div>{{ r.description[:80] }}<div class="muted small">{{ r.property_address or r.client_name or "" }} · {{ r.created_at[:10] }}{% if r.cost %} · ${{ "%.2f"|format(r.cost) }}{% endif %}</div></div>
+      {{ status_badge(r.status) }}
+    </a>
+  {% else %}<p class="muted">No jobs logged yet.</p>{% endfor %}
+</section>
+
+<form method="post" action="/vendors/{{ vendor.id }}/delete" onsubmit="return confirm('Remove this vendor from your list?')">
+  <button class="danger">Delete vendor</button>
+</form>
+{% endblock %}

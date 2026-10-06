@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>{{ settings.business_name }}</h1>
+  <p class="muted">Sign in to manage your vendors and clients.</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post">
+    <label>Email <input type="email" name="email" required value="{{ email }}" autofocus></label>
+    <label>Password <input type="password" name="password" required></label>
+    <button class="primary">Sign in</button>
+  </form>
+</div>
+{% endblock %}

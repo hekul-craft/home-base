@@ -1,0 +1,16 @@
+{% macro stars(n) -%}
+  {%- if n %}<span class="stars" title="{{ n }} of 5">{{ "★" * n }}{{ "☆" * (5 - n) }}</span>{% endif -%}
+{%- endmacro %}
+
+{% macro status_badge(s) -%}
+  <span class="badge status-{{ s }}">{{ s }}</span>
+{%- endmacro %}
+
+{% macro urgency_badge(u) -%}
+  {%- if u == "urgent" %}<span class="badge urgent">urgent</span>{% elif u == "low" %}<span class="badge muted">low</span>{% endif -%}
+{%- endmacro %}
+
+{% macro category_options(categories, selected, blank="Choose a category…") -%}
+  <option value="">{{ blank }}</option>
+  {% for c in categories %}<option value="{{ c }}" {% if c == selected %}selected{% endif %}>{{ c }}</option>{% endfor %}
+{%- endmacro %}

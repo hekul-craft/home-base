@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Clients</h1>
+  <a class="button primary" href="/clients/new">Add client</a>
+</div>
+
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Search name, email, address…">
+  <select name="type" onchange="this.form.submit()">
+    <option value="">All clients</option>
+    {% for key, label in client_types.items() %}<option value="{{ key }}" {% if key == type %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button>Search</button>
+</form>
+
+<div class="card table-wrap">
+<table>
+  <thead><tr><th>Name</th><th>Type</th><th>Address</th><th>Contact</th></tr></thead>
+  <tbody>
+  {% for c in clients %}
+    <tr>
+      <td><a href="/clients/{{ c.id }}"><strong>{{ c.name }}</strong></a></td>
+      <td><span class="badge type-{{ c.client_type }}">{{ c.client_type }}</span></td>
+      <td>{{ c.address }}{% if c.unit %} #{{ c.unit }}{% endif %}</td>
+      <td class="small">{{ c.email }}<br>{{ c.phone }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="muted">No clients {% if q or type %}match your search{% else %}yet{% endif %}.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

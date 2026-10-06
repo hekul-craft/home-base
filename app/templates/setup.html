@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Get started{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>Welcome to HomeBase</h1>
+  <p class="muted">Create the first account for your business. You can add teammates later.</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post">
+    <label>Business name <input name="business_name" value="{{ form.business_name or '' }}" placeholder="Smith Realty Group"></label>
+    <label>Your name <input name="name" required value="{{ form.name or '' }}"></label>
+    <label>Phone (shown to clients) <input name="agent_phone" value="{{ form.agent_phone or '' }}"></label>
+    <label>Email <input type="email" name="email" required value="{{ form.email or '' }}"></label>
+    <label>Password <input type="password" name="password" required minlength="8"></label>
+    <button class="primary">Create account</button>
+  </form>
+</div>
+{% endblock %}
