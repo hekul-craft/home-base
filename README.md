@@ -21,7 +21,7 @@ A trusted-vendor directory and client portal for realtors and property managers.
 ```bash
 pip install -r requirements.txt
 python -m app.seed            # optional: demo data, login demo@homebase.test / homebase123
-uvicorn app.main:create_app --factory --reload
+python -m uvicorn app.main:create_app --factory --reload
 ```
 
 Open http://localhost:8000. If you skip the seed step, the first visit takes
@@ -56,7 +56,7 @@ shown to clients.
 ## Deploying
 
 Any host that runs Python works (Render, Railway, Fly.io, a small VPS). Run
-`uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT`, keep
+`python -m uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT`, keep
 `homebase.db` on a persistent disk, serve over HTTPS and set `HOMEBASE_HTTPS=1`
 so session cookies are marked secure.
 
